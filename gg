@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+const prog = require('caporal');
+
+//commands
+const projectInit = require('./command/project-init');
+
+prog
+  .version('1.0.0')
+  .command('init',   'Crie um novo projeto')
+  .argument('[artifactId]', 'Nome do artefato')
+  .argument('[groupId]', 'Nome do grupo')
+  .argument('[version]', 'Versão do projeto')
+  .action((args, options, logger) => projectInit.run(args, options, logger))
+  
+prog.parse(process.argv);
+
+

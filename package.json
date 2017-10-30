@@ -1,0 +1,33 @@
+{
+  "name": "gumga-cli",
+  "version": "1.0.0",
+  "contributors": [
+    { 
+      "name" : "Mateus Miranda de Almeida", 
+      "email" : "info.mateusmiranda@gmail.com", 
+      "url" : "https://github.com/mateusmirandaalmeida"
+    },
+    { 
+      "name" : "Felipe Sabadini Facina", 
+      "email" : "fsabadini@hotmail.com", 
+      "url" : "https://github.com/felipesabadini"
+    }
+  ],
+  "bin": {
+    "gg": "./gg"
+  },
+  "description": "",
+  "main": "gg",
+  "scripts": {
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@angular/cli": "^1.4.9",
+    "caporal": "^0.8.0",
+    "get-installed-path": "^4.0.8",
+    "inquirer": "^3.3.0",
+    "ora": "^1.3.0",
+    "replace": "^0.3.0"
+  }
+}
