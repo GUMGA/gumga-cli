@@ -41,23 +41,27 @@ module.exports = {
             choices: [
               {
                 name: 'Angular 1 - RequireJs',
-                value: 1
+                value: 'REQUIREJS'
               },
               {
                 name: 'Angular 1 - Webpack',
-                value: 2
+                value: 'WEBPACK'
               },  
               {
                 name: 'Angular 4',
-                value: 3
+                value: 'ANGULAR4'
               }
             ]
           });
         inquirer.prompt(questions).then(function (answers) {
+            const spinner = ora('Gerando o projeto').start();
+            if(fs.existsSync(answers.artifactId)){
+                spinner.fail(`Não podemos criar seu projeto, já existe uma pasta com o nome "${answers.artifactId}" no diretório atual.`);      
+                return;
+            }
             answers.artifactId = answers.artifactId || args.artifactId;
             answers.groupId = answers.groupId || args.groupId;
             answers.version = answers.version || args.version;
-            const spinner = ora('Gerando o projeto').start();
             const command = `mvn archetype:generate -DinteractiveMode=false -DarchetypeGroupId=io.gumga -DarchetypeArtifactId=gumga-archetype -DarchetypeVersion=LATEST -DgroupId=${answers.groupId} -DartifactId=${answers.artifactId} -Dversion=${answers.version}`;
             exec(command, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {                
                 if (error !== null) {
@@ -75,19 +79,19 @@ const handlingFolders = (answers, projectLoader) => {
         let dirPresentation = `${answers.artifactId}/${answers.artifactId}-presentation`;
         switch(answers.presentationMode) {
             //CASO FOR GERAR EM REQUIREJS
-            case 1:
+            case 'REQUIREJS':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
                 projectLoader.succeed(`O seu incrível projeto(${answers.artifactId}) foi gerado.`);
             break;
             //CASO FOR GERAR EM WEBPACK
-            case 2:    
+            case 'WEBPACK':    
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(dirPresentation);
                 projectLoader.succeed(`O seu incrível projeto(${answers.artifactId}) foi gerado.`);
             break;
             //CASO FOR GERAR EM ANGULAR 4
-            case 3:
+            case 'ANGULAR4':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
                 util.deleteFolderRecursive(`${dirPresentation}/src/main/webapp`);
@@ -114,7 +118,12 @@ const handlingFolders = (answers, projectLoader) => {
     
             break;
         }
+        createGGFIle(answers);
     }catch(e){
         util.deleteFolderRecursive(`${answers.artifactId}`);
     }
+}
+
+const createGGFIle = (answers) => {
+    fs.writeFile(`${answers.artifactId}/gg.config.json`, JSON.stringify(answers), 'utf8', function (err) {});
 }
