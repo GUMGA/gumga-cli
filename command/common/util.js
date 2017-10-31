@@ -3,6 +3,8 @@ const path = require('path');
 const replace = require("replace");
 
 var util = {
+    GG_FILE_CONFIG_NAME : 'gg.config.json',
+
     deleteFolderRecursive: (path) => {
         if (fs.existsSync(path)) {
             fs.readdirSync(path).forEach(function(file, index){
@@ -43,6 +45,9 @@ var util = {
         if (!fs.existsSync(dir)){
             fs.mkdirSync(dir);
         }
+    },
+    directoryIsProjectGG : () => {
+        return fs.existsSync('./'.concat(util.GG_FILE_CONFIG_NAME));
     }
 }
 

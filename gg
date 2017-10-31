@@ -2,16 +2,17 @@
 const prog = require('caporal');
 
 //commands
-const projectInit = require('./command/project-init');
+const projectInit  = require('./command/project-init');
+const projectBuild = require('./command/project-build');
 
 prog
   .version('1.0.0')
   .command('init',   'Crie um novo projeto')
-  .argument('[artifactId]', 'Nome do artefato')
+  .argument('[artifactId]', 'Nome do artefato', /^[a-zA-Z0-9]+$/g)
   .argument('[groupId]', 'Nome do grupo')
   .argument('[version]', 'Versão do projeto')
   .action((args, options, logger) => projectInit.run(args, options, logger))
-  
+  .command('build',   'Faz a compilação dos módulos')
+  .action((args, options, logger) => projectBuild.run(args, options, logger))
+
 prog.parse(process.argv);
-
-

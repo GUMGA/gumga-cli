@@ -8,6 +8,10 @@ const util = require('./common/util');
 
 module.exports = {
     run: function(args, options, logger){
+        if(util.directoryIsProjectGG()){
+            logger.error('Você está em um diretório de um projeto existente, não é permitido a criação de outros projetos apartir desse diretório.');
+            return;
+        }
         let questions = [];
         if(!args.artifactId) {
             questions.push({
@@ -15,6 +19,19 @@ module.exports = {
                 message: 'Nome do artefato',
                 default: 'exemplo',
                 name: 'artifactId',
+                validate: function(input){
+                    let done = this.async();
+                    if(!(/^[a-zA-Z0-9]+$/g.test(input))){
+                        done('O nome do seu projeto não pode conter caracteres especiais.');
+                        return;
+                    }
+                    if(fs.existsSync(input)){
+                        done('Já existe uma pasta com esse nome no diretório atual, tente outro nome.');
+                        return;
+                    }else{
+                        done(null, true);
+                    }
+                }
             });
         }
         if(!args.groupId) {
@@ -22,7 +39,7 @@ module.exports = {
                 type: 'input',
                 message: 'Nome do grupo',
                 default: 'br.com',
-                name: 'groupId',
+                name: 'groupId'
             });
         }
         if(!args.version) {
@@ -30,7 +47,7 @@ module.exports = {
                 type: 'input',
                 message: 'Versão',
                 default: '1.0.0',
-                name: 'version',
+                name: 'version'
             });
         }
         questions.push({
@@ -63,7 +80,7 @@ module.exports = {
             answers.groupId = answers.groupId || args.groupId;
             answers.version = answers.version || args.version;
             const command = `mvn archetype:generate -DinteractiveMode=false -DarchetypeGroupId=io.gumga -DarchetypeArtifactId=gumga-archetype -DarchetypeVersion=LATEST -DgroupId=${answers.groupId} -DartifactId=${answers.artifactId} -Dversion=${answers.version}`;
-            exec(command, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {                
+            exec(command, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {     
                 if (error !== null) {
                     spinner.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);            
                 } else {
@@ -125,5 +142,5 @@ const handlingFolders = (answers, projectLoader) => {
 }
 
 const createGGFIle = (answers) => {
-    fs.writeFile(`${answers.artifactId}/gg.config.json`, JSON.stringify(answers), 'utf8', function (err) {});
+    fs.writeFile(`${answers.artifactId}/${util.GG_FILE_CONFIG_NAME}`, JSON.stringify(answers), 'utf8', function (err) {});
 }
