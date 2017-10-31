@@ -80,7 +80,7 @@ module.exports = {
             answers.groupId = answers.groupId || args.groupId;
             answers.version = answers.version || args.version;
             const command = `mvn archetype:generate -DinteractiveMode=false -DarchetypeGroupId=io.gumga -DarchetypeArtifactId=gumga-archetype -DarchetypeVersion=LATEST -DgroupId=${answers.groupId} -DartifactId=${answers.artifactId} -Dversion=${answers.version}`;
-            exec(command, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {     
+            exec(command, {maxBuffer: Infinity}, function (error, stdout, stderr) {     
                 if (error !== null) {
                     spinner.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);            
                 } else {
@@ -114,7 +114,7 @@ const handlingFolders = (answers, projectLoader) => {
                 util.deleteFolderRecursive(`${dirPresentation}/src/main/webapp`);
     
                 const command = `cd ${dirPresentation}/src/main && ng new ${answers.artifactId} --skip-install`;
-                exec(command, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {
+                exec(command, {maxBuffer: Infinity}, function (error, stdout, stderr) {
                     if (error !== null) {
                         projectLoader.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);  
                     } else {                    
@@ -136,6 +136,7 @@ const handlingFolders = (answers, projectLoader) => {
             break;
         }
         createGGFIle(answers);
+        renameGithubFile(answers);
     }catch(e){
         util.deleteFolderRecursive(`${answers.artifactId}`);
     }
@@ -144,3 +145,7 @@ const handlingFolders = (answers, projectLoader) => {
 const createGGFIle = (answers) => {
     fs.writeFile(`${answers.artifactId}/${util.GG_FILE_CONFIG_NAME}`, JSON.stringify(answers), 'utf8', function (err) {});
 }
+
+const renameGithubFile = (answers) => {
+    exec(`mv ${answers.artifactId}/mudar_para_.gitignore ${answers.artifactId}/.gitignore`, {maxBuffer: Infinity},  (error, stdout, stderr) => {});
+} 

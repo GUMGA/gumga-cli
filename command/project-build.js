@@ -17,7 +17,7 @@ module.exports = {
             spinner.color = 'green';
             spinner.text = 'Que tal tomar um café enquanto isso...';
         }, 20000);
-        exec(`mvn clean install`, {maxBuffer: 1024 * 1024}, function (error, stdout, stderr) {     
+        exec(`mvn clean install`, {maxBuffer: Infinity}, function (error, stdout, stderr) {     
             if (error !== null) {
                 spinner.fail(`Problemas ao compilar seu projeto. \n ${error}`);            
             } else {
