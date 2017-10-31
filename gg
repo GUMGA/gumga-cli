@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 const prog = require('caporal');
+const ora = require('ora');
+const exec = require('child_process').exec;
+const { getInstalledPath } = require('get-installed-path');
 
 //commands
 const projectInit  = require('./command/project-init');
@@ -15,4 +18,10 @@ prog
   .command('build',   'Faz a compilação dos módulos')
   .action((args, options, logger) => projectBuild.run(args, options, logger))
 
-prog.parse(process.argv);
+getInstalledPath('@angular/cli').then(function(pt){
+  prog.parse(process.argv);
+}, () => {
+  //pede para o usuário instalar o angular cli.
+  const spinner = ora('Aguarde...').start();
+  spinner.fail(`Não encontramos algumas dependências, execute: npm install -g @angular/cli`);
+});
