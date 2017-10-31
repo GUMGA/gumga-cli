@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { getInstalledPath } = require('get-installed-path');
 const util = require('./common/util');
+const opener = require("opener");
 
 module.exports = {
     run: function(args, options, logger){
@@ -99,13 +100,13 @@ const handlingFolders = (answers, projectLoader) => {
             case 'REQUIREJS':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
-                projectLoader.succeed(`O seu incrível projeto(${answers.artifactId}) foi gerado.`);
+                afterProjectGenerate(projectLoader, answers);
             break;
             //CASO FOR GERAR EM WEBPACK
             case 'WEBPACK':    
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(dirPresentation);
-                projectLoader.succeed(`O seu incrível projeto(${answers.artifactId}) foi gerado.`);
+                afterProjectGenerate(projectLoader, answers);
             break;
             //CASO FOR GERAR EM ANGULAR 4
             case 'ANGULAR4':
@@ -126,7 +127,7 @@ const handlingFolders = (answers, projectLoader) => {
                                 getInstalledPath('gumga-cli').then(function(pt){
                                     util.copyRecursiveSync(`${pt}/template-presentation/module/META-INF`, `${dirPresentation}/src/main/webapp/META-INF`);
                                     util.copyRecursiveSync(`${pt}/template-presentation/module/WEB-INF`, `${dirPresentation}/src/main/webapp/WEB-INF`);
-                                    projectLoader.succeed(`O seu incrível projeto(${answers.artifactId}) foi gerado.`);
+                                    afterProjectGenerate(projectLoader, answers);
                                 });
                             }                        
                         });
@@ -148,4 +149,66 @@ const createGGFIle = (answers) => {
 
 const renameGithubFile = (answers) => {
     exec(`mv ${answers.artifactId}/mudar_para_.gitignore ${answers.artifactId}/.gitignore`, {maxBuffer: Infinity},  (error, stdout, stderr) => {});
-} 
+}
+
+const afterProjectGenerate = (projectLoader, answersProject) => {
+    projectLoader.succeed(`O seu incrível projeto(${answersProject.artifactId}) foi gerado.`);
+    handlingGumgaFile(answersProject);
+}
+
+const handlingGumgaFile = (answersProject) => {
+    inquirer.prompt([
+        {
+            type: 'confirm',
+            name: 'move',
+            message: `Deseja mover o arquivo ${answersProject.artifactId}.properties para a pasta gumgafiles?`
+        }
+    ]).then(answersMoveFile => {
+        if(answersMoveFile.move){
+            let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
+            if(fs.existsSync(dir)){
+                inquirer.prompt([
+                    {
+                        type: 'confirm',
+                        name: 'overwrite',
+                        message: `Já existe um arquivo ${answersProject.artifactId}.properties na pasta ${util.getGumgaFilesDir()}, deseja sobrescrevê- lo?`
+                    }
+                ]).then(answersOverwriteFile => {
+                    if(answersOverwriteFile.overwrite){
+                        fs.unlinkSync(dir);
+                        moveGumgaFile(answersProject);
+                    }else{
+                        finalizeMessage();
+                    }
+                })
+            }else{
+                moveGumgaFile(answersProject);
+            }
+        }else{
+            finalizeMessage();
+        }
+    });
+}
+
+const moveGumgaFile = (answersProject) => {
+    let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
+    fs.createReadStream(`${answersProject.artifactId}/${answersProject.artifactId}.properties`)
+    .pipe(fs.createWriteStream(dir));
+    inquirer.prompt([
+      {
+          type: 'confirm',
+          name: 'open',
+          message: `Quer aproveitar e editar o arquivo ${answersProject.artifactId}.properties com suas configurações?`
+      }
+    ]).then(answersOpenFile => {
+      if(answersOpenFile.open){
+          opener(dir);
+      }
+      finalizeMessage();
+    })
+}
+
+const finalizeMessage = () => {
+    const spinner = ora('Aguarde...').start();
+    spinner.succeed('Pronto, tudo certo!');
+}

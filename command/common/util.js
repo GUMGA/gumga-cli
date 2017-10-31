@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const replace = require("replace");
+const userHome = require('user-home');
 
 var util = {
     GG_FILE_CONFIG_NAME : 'gg.config.json',
@@ -48,7 +49,25 @@ var util = {
     },
     directoryIsProjectGG : () => {
         return fs.existsSync('./'.concat(util.GG_FILE_CONFIG_NAME));
+    },
+    getGumgaFilesDir: () => {
+        return userHome.concat('/gumgafiles');
+    },
+    testApplicationInstalled: (app, textToFind, callback) => {
+        require('child_process').exec(`${app} -version`, {maxBuffer: Infinity}, function (error, stdout, stderr) {
+            if (error !== null) {
+                callback(false);
+            } else {
+                let str = stderr || stdout;
+                data = str.toString().split('\n')[0];
+                let appVersion = new RegExp(textToFind).test(data) ? true : false;
+                callback(appVersion != false);
+            }
+        });
     }
 }
 
 module.exports = util;
+
+
+
