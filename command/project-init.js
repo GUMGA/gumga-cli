@@ -17,7 +17,7 @@ module.exports = {
         if(!args.artifactId) {
             questions.push({
                 type: 'input',
-                message: 'Nome do artefato',
+                message: 'Nome do artefato..: ',
                 default: 'exemplo',
                 name: 'artifactId',
                 validate: function(input){
@@ -38,7 +38,7 @@ module.exports = {
         if(!args.groupId) {
             questions.push({
                 type: 'input',
-                message: 'Nome do grupo',
+                message: 'Nome do grupo..: ',
                 default: 'br.com',
                 name: 'groupId'
             });
@@ -46,7 +46,7 @@ module.exports = {
         if(!args.version) {
             questions.push({
                 type: 'input',
-                message: 'Versão',
+                message: 'Versão..: ',
                 default: '1.0.0',
                 name: 'version'
             });
@@ -148,23 +148,25 @@ const createGGFIle = (answers) => {
 }
 
 const renameGithubFile = (answers) => {
-    exec(`mv ${answers.artifactId}/mudar_para_.gitignore ${answers.artifactId}/.gitignore`, {maxBuffer: Infinity},  (error, stdout, stderr) => {});
+    fs.rename(`./${answers.artifactId}/mudar_para_.gitignore`, `${answers.artifactId}/.gitignore`, function(err) {});
 }
 
 const afterProjectGenerate = (projectLoader, answersProject) => {
     projectLoader.succeed(`O seu incrível projeto(${answersProject.artifactId}) foi gerado.`);
-    handlingGumgaFile(answersProject);
+    createGumgaFile(answersProject);
 }
 
-const handlingGumgaFile = (answersProject) => {
+const createGumgaFile = (answersProject) => {
     inquirer.prompt([
         {
             type: 'confirm',
             name: 'move',
-            message: `Deseja mover o arquivo ${answersProject.artifactId}.properties para a pasta gumgafiles?`
+            message: `Você deseja configurar um banco de dados?`
         }
     ]).then(answersMoveFile => {
         if(answersMoveFile.move){
+            //create folder gumgafiles if not exists
+            if(!fs.existsSync(util.getGumgaFilesDir())) fs.mkdirSync(util.getGumgaFilesDir());
             let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
             if(fs.existsSync(dir)){
                 inquirer.prompt([
@@ -176,13 +178,13 @@ const handlingGumgaFile = (answersProject) => {
                 ]).then(answersOverwriteFile => {
                     if(answersOverwriteFile.overwrite){
                         fs.unlinkSync(dir);
-                        moveGumgaFile(answersProject);
+                        configureDataBaseGumgaFile(answersProject);
                     }else{
                         finalizeMessage();
                     }
                 })
             }else{
-                moveGumgaFile(answersProject);
+                configureDataBaseGumgaFile(answersProject);
             }
         }else{
             finalizeMessage();
@@ -190,22 +192,135 @@ const handlingGumgaFile = (answersProject) => {
     });
 }
 
-const moveGumgaFile = (answersProject) => {
-    let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
-    fs.createReadStream(`${answersProject.artifactId}/${answersProject.artifactId}.properties`)
-    .pipe(fs.createWriteStream(dir));
+const configureDataBaseGumgaFile = (answersProject) => {
+    getInstalledPath('gumga-cli').then(pathCli => {
+        let properties = fs.readFileSync(`${pathCli}/template.properties`, `utf8`);
+        
+        inquirer.prompt([
+            {
+                type: 'list',
+                message: 'Qual banco de dados você utiliza?',
+                name: 'name',
+                default: 1,
+                choices: [
+                    {
+                        name: 'MySQL',
+                        value: 'MYSQL'
+                    },
+                    {
+                        name: 'PostgreSQL',
+                        value: 'POSTGRES'
+                    }
+                ]
+            }
+        ]).then(answersDatabase => {
+            let typeDatabase = answersDatabase.name;
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    message: 'Endereço do servidor..: ',
+                    name: 'host',
+                    default: 'localhost'
+                },
+                {
+                    type: 'input',
+                    message: 'Porta..: ',
+                    name: 'port',
+                    default: typeDatabase == 'MYSQL' ? 3306 : typeDatabase == 'POSTGRES' ? 5432 : 1000,
+                    validate: function(input){
+                        let done = this.async();
+                        if(!Number.isInteger(input)){
+                            done('Por favor, informe uma porta válida.');
+                            return;
+                        }
+                        done(null, true);
+                    }
+                },
+                {
+                    type: 'input',
+                    message: 'Nome da base de dados..: ',
+                    name: 'database',
+                    validate: function(input){
+                        let done = this.async();
+                        if(!input){
+                            done('Por favor, preencha o nome da base de dados.');
+                            return;
+                        }
+                        done(null, true);
+                    }
+                },
+                {
+                    type: 'input',
+                    message: 'Usuário do banco..: ',
+                    name: 'user',
+                    validate: function(input){
+                        let done = this.async();
+                        if(!input){
+                            done('Por favor, preencha o nome do usuário.');
+                            return;
+                        }
+                        done(null, true);
+                    }
+                },
+                {
+                    type: 'input',
+                    message: 'Senha..: ',
+                    name: 'password'
+                }
+            ]).then(answers => {
+                properties = util.replaceAll(properties, 'GUMGA_DB_NAME', typeDatabase);
+                properties = util.replaceAll(properties, 'GUMGA_USER', answers.user);
+                properties = util.replaceAll(properties, 'GUMGA_PASSWORD', answers.password);
+                switch(typeDatabase){
+                    case 'MYSQL':
+                        properties = util.replaceAll(properties, 'GUMGA_URL', `jdbc:mysql://${answers.host}:${answers.port}/${answers.database}?zeroDateTimeBehavior=convertToNull&useUnicode=yes&characterEncoding=utf8&createDatabaseIfNotExist=true`);
+                        properties = util.replaceAll(properties, 'GUMGA_CLASS_NAME', 'com.mysql.jdbc.jdbc2.optional.MysqlDataSource');
+                        properties = util.replaceAll(properties, 'GUMGA_DIALECT', 'org.hibernate.dialect.MySQL5Dialect');                        
+                        break;
+                    case 'POSTGRES':
+                        properties = util.replaceAll(properties, 'GUMGA_URL', `jdbc:postgresql://${answers.host}:${answers.port}/${answers.database}?createDatabaseIfNotExist=true`);
+                        properties = util.replaceAll(properties, 'GUMGA_CLASS_NAME', 'org.postgresql.jdbc2.optional.SimpleDataSource');
+                        properties = util.replaceAll(properties, 'GUMGA_DIALECT', 'org.hibernate.dialect.PostgreSQLDialect');
+                        break;
+                }
+                configureSecurityGumgFile(properties, answersProject);
+            })
+        })
+
+    });
+}
+
+const configureSecurityGumgFile = (properties, answersProject) => {
     inquirer.prompt([
-      {
-          type: 'confirm',
-          name: 'open',
-          message: `Quer aproveitar e editar o arquivo ${answersProject.artifactId}.properties com suas configurações?`
-      }
-    ]).then(answersOpenFile => {
-      if(answersOpenFile.open){
-          opener(dir);
-      }
-      finalizeMessage();
+        {
+            type: 'confirm',
+            name: 'usage',
+            message: `Você utiliza o segurança?`
+        }
+    ]).then(resp => {
+        if(resp.usage){
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    message: 'Qual o endereço do segurança..: ',
+                    name: 'security',
+                    default: 'https://www.gumga.io'
+                },
+            ]).then(answers => {
+                properties = util.replaceAll(properties, 'GUMGA_SECURITY', answers.security);
+                createFileProperties(properties, answersProject);
+                finalizeMessage();
+            });
+        }else{
+            createFileProperties(properties, answersProject);
+            finalizeMessage();
+        }
     })
+}
+
+const createFileProperties = (str, answersProject) => {
+    let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
+    fs.writeFile(dir, str, function(err) {}); 
 }
 
 const finalizeMessage = () => {

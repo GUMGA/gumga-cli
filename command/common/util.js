@@ -33,6 +33,9 @@ var util = {
             fs.linkSync(src, dest);
         }
     },
+    replaceAll: (str, search, replacement) => {
+        return str.replace(new RegExp(search, 'g'), replacement);
+    },
     replaceFiles: (regex, value, files) => {
         replace({
             regex: regex,
