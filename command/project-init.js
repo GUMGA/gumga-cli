@@ -72,6 +72,7 @@ module.exports = {
             ]
           });
         inquirer.prompt(questions).then(function (answers) {
+            answers.artifactId = util.lowerFirstLetter(answers.artifactId);
             const spinner = ora('Gerando o projeto').start();
             if(fs.existsSync(answers.artifactId)){
                 spinner.fail(`Não podemos criar seu projeto, já existe uma pasta com o nome "${answers.artifactId}" no diretório atual.`);      
@@ -239,6 +240,7 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 {
                     type: 'input',
                     message: 'Nome da base de dados..: ',
+                    default: answersProject.artifactId,
                     name: 'database',
                     validate: function(input){
                         let done = this.async();
@@ -252,6 +254,7 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 {
                     type: 'input',
                     message: 'Usuário do banco..: ',
+                    default: answersProject.artifactId,
                     name: 'user',
                     validate: function(input){
                         let done = this.async();
@@ -265,6 +268,7 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 {
                     type: 'input',
                     message: 'Senha..: ',
+                    default: answersProject.artifactId,
                     name: 'password'
                 }
             ]).then(answers => {

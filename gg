@@ -10,18 +10,25 @@ const inquirer = require('inquirer');
 const opener = require("opener");
 
 //commands
-const projectInit  = require('./command/project-init');
-const projectBuild = require('./command/project-build');
+const projectInit   = require('./command/project-init');
+const projectBuild  = require('./command/project-build');
+const projectEntity = require('./command/project-entity');
 
 prog
-  .version('1.0.0')
+  .version(require('./package.json').version)
+  //start app
   .command('init',   'Crie um novo projeto')
   .argument('[artifactId]', 'Nome do artefato', /^[a-zA-Z0-9]+$/g)
   .argument('[groupId]', 'Nome do grupo')
   .argument('[version]', 'Versão do projeto')
   .action((args, options, logger) => projectInit.run(args, options, logger))
+  //build
   .command('build',   'Faz a compilação dos módulos')
   .action((args, options, logger) => projectBuild.run(args, options, logger))
+  //create entity
+  .command('entity',   'Gera uma nova entidade')
+  .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
+  .action((args, options, logger) => projectEntity.run(args, options, logger))
 
 
 app.run(prog);
