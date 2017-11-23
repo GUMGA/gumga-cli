@@ -32,6 +32,36 @@ var util = {
             });
         })
     },
+    buildApplication: () => {
+        let project = util.getProjectInfo();
+        return new Promise((resp, rej) => {
+            exec(`cd ${project.artifactId}-application && mvn clean install`, { maxBuffer: Infinity }, function (error, stdout, stderr) {
+                if (error !== null) {
+                    rej(error);
+                } else {
+                    resp(stdout);
+                }
+            });
+        })
+    },
+    build: () => {
+        let project = util.getProjectInfo();
+        return new Promise((resp, rej) => {
+            let project = util.getProjectInfo(), command;
+            if(project.presentationMode == 'NONE'){
+                command = 'mvn clean install';
+            }else{
+                command = project.presentationMode == 'WEBPACK' ? `mvn -pl '!${project.artifactId}-presentation-webpack' install` : `mvn -pl '!mateusexemplo-presentation' install`;
+            }
+            exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
+                if (error !== null) {
+                    rej(error);
+                } else {
+                    resp(stdout);
+                }
+            });
+        })
+    },
     findFilesInDir: (startPath, filter) => {
         let results = [];
         if (!fs.existsSync(startPath)) {
@@ -71,6 +101,31 @@ var util = {
     getModelDir: () => {
         let projectInfo = util.getProjectInfo();
         return process.cwd() + `/${projectInfo.artifactId}-domain/src/main/java/${util.replaceAll(projectInfo.groupId, '.', '/')}/${projectInfo.artifactId}/domain/model`;
+    },
+    getApplicationDir: () => {
+        let projectInfo = util.getProjectInfo();
+        return process.cwd() + `/${projectInfo.artifactId}-application/src/main/java/${util.replaceAll(projectInfo.groupId, '.', '/')}/${projectInfo.artifactId}/application`;
+    },
+    getApiDir: () => {
+        let projectInfo = util.getProjectInfo();
+        return process.cwd() + `/${projectInfo.artifactId}-api/src/main/java/${util.replaceAll(projectInfo.groupId, '.', '/')}/${projectInfo.artifactId}/api`;
+    },
+    getPresentationDir: () => {
+        let projectInfo = util.getProjectInfo();
+        if (projectInfo.presentationMode == 'WEBPACK') {
+            return process.cwd() + `/${projectInfo.artifactId}-presentation-webpack/src/main/webapp/app/modules`;
+        }
+        if (projectInfo.presentationMode == 'REQUIREJS') {
+            return process.cwd() + `/${projectInfo.artifactId}-presentation/src/main/webapp/app/modules`;
+        }
+        if(projectInfo.presentationMode == 'ANGULAR4'){
+            ora('FRONT').start().fail(`O suporte a Angular4 ainda está em progresso, no momento não podemos gerar esse módulo.`);
+            process.exit();
+        }
+        if(projectInfo.presentationMode == 'NONE'){
+            ora('FRONT').start().fail(`Não foi possivel completar a ação, não identificamos o módulo front-end na sua aplicação.`);
+            process.exit();
+        }
     },
     replaceFiles: (regex, value, files) => {
         replace({

@@ -4,6 +4,9 @@ const exec = require('child_process').exec;
 const fs = require('fs');
 const inquirer = require('inquirer');
 const path = require('path');
+const projectService = require('./project-service');
+const projectAPI = require('./project-api');
+const projectFRONT = require('./project-front');
 
 module.exports = {
     run: function (args, options, logger) {
@@ -13,10 +16,10 @@ module.exports = {
         }
 
         let modelDir = util.getModelDir();
-        
-        if(args.entityName 
+
+        if (args.entityName
             && fs.existsSync(modelDir)
-            && util.findFilesInDir(modelDir, '.java').filter(file => path.basename(file).replace(path.extname(file), '') == util.upperFirstLetter(args.entityName)).length > 0){
+            && util.findFilesInDir(modelDir, '.java').filter(file => path.basename(file).replace(path.extname(file), '') == util.upperFirstLetter(args.entityName)).length > 0) {
             logger.error('Já existe uma entidade com este nome, escolha outro.');
             args.entityName = null;
         }
@@ -32,15 +35,19 @@ module.exports = {
                         done('Informe o nome da entidade.');
                         return;
                     }
+                    if (input.indexOf(' ') > 0) {
+                        done('Por favor, não utilize espaços.');
+                        return;
+                    }
                     let modelDir = util.getModelDir();
                     if (fs.existsSync(modelDir)) {
                         let existsEntity = util.findFilesInDir(modelDir, '.java').filter(file => path.basename(file).replace(path.extname(file), '') == util.upperFirstLetter(input)).length > 0;
-                        if(existsEntity){
+                        if (existsEntity) {
                             done('Já existe uma entidade com este nome, escolha outro.');
-                        }else{
+                        } else {
                             done(null, true);
                         }
-                    }else{
+                    } else {
                         done(null, true);
                     }
                 }
@@ -156,7 +163,7 @@ const generateAssociation = (attributes, callback) => {
     let modelDir = util.getModelDir();
     if (fs.existsSync(modelDir)) {
         let files = util.findFilesInDir(modelDir, '.java');
-        if(files.length == 0){
+        if (files.length == 0) {
             console.error('Não encontramos outras entidades para fazer uma associação');
             callback(attributes);
             return;
@@ -214,19 +221,23 @@ const generateAssociation = (attributes, callback) => {
                         done('Informe o nome da associação.');
                         return;
                     }
+                    if (input.indexOf(' ') > 0) {
+                        done('Por favor, não utilize espaços.');
+                        return;
+                    }
                     done(null, true);
                 }
             }).then(answersName => {
                 ora('Adicionando associação').start().succeed(`Associação com ${answers.association} foi criada.`);
-                if(answers.type.endsWith('Many')){
+                if (answers.type.endsWith('Many')) {
                     attributes = attributes.concat(`${answersName.name}:List<${answers.association}>:@${answers.type},`);
-                }else{
+                } else {
                     attributes = attributes.concat(`${answersName.name}:${answers.association}:@${answers.type},`);
                 }
                 callback(attributes);
             })
         });
-    }else{
+    } else {
         console.error('Não encontramos outras entidades para fazer uma associação');
         callback(attributes);
         return;
@@ -243,6 +254,10 @@ const generateField = (attributes, callback) => {
                 let done = this.async();
                 if (!input) {
                     done('Informe o nome do campo.');
+                    return;
+                }
+                if (input.indexOf(' ') > 0) {
+                    done('Por favor, não utilize espaços.');
                     return;
                 }
                 done(null, true);
@@ -350,11 +365,69 @@ const createEntity = (args, projectInfo, packageEntity, entityExtends, attribute
         if (error !== null) {
             spinner.fail(`Problemas ao gerar sua entidade. \n ${error}`);
         } else {
-            util.buildDomain().then(resp => {
+            spinner.text = 'Executando: mvn clean install';
+            util.build().then(resp => {
                 spinner.succeed(`Entidade gerada com sucesso.`);
+
+                let choices = [];
+
+                choices.push({
+                    name: 'SERVICE',
+                    value: 'SERVICE'
+                });
+
+                choices.push({
+                    name: 'API',
+                    value: 'API'
+                });
+
+                if (projectInfo.presentationMode != 'NONE') {
+                    choices.push({
+                        name: 'FRONT-END',
+                        value: 'FRONTEND'
+                    });
+                }
+
+                inquirer.prompt([
+                    {
+                        type: 'checkbox',
+                        message: 'O que deseja gerar apartir dessa entidade?',
+                        name: 'choices',
+                        choices: choices
+                    }
+                ]).then(data => {
+                    generateChoicesPending(data.choices, packageEntity, args.entityName);
+                })
+
             }, err => {
                 spinner.fail(`Problemas ao gerar sua entidade. \n ${err}`);
             })
         }
     });
+}
+
+const generateChoicesPending = (choices, packageEntity, entityName) => {
+    let executing = false;
+    choices.forEach(choice => {
+        if (!executing) {
+            executing = true;
+            switch (choice) {
+                case 'SERVICE':
+                    projectService.generateServiceByEntity(packageEntity, entityName, () => {
+                        generateChoicesPending(choices.filter(choiceValue => choiceValue != choice), packageEntity, entityName);
+                    });
+                    break;
+                case 'API':
+                    projectAPI.generateAPIByEntity(packageEntity, entityName, () => {
+                        generateChoicesPending(choices.filter(choiceValue => choiceValue != choice), packageEntity, entityName);
+                    });
+                    break;
+                case 'FRONTEND':
+                    projectFRONT.generateFrontByEntity(packageEntity, entityName, () => {
+                        generateChoicesPending(choices.filter(choiceValue => choiceValue != choice), packageEntity, entityName);
+                    });
+                    break;
+            }
+        }
+    })
 }

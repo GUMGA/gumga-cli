@@ -13,6 +13,9 @@ const opener = require("opener");
 const projectInit   = require('./command/project-init');
 const projectBuild  = require('./command/project-build');
 const projectEntity = require('./command/project-entity');
+const projectService = require('./command/project-service');
+const projectAPI = require('./command/project-api');
+const projectFRONT = require('./command/project-front');
 
 prog
   .version(require('./package.json').version)
@@ -29,6 +32,18 @@ prog
   .command('entity',   'Gera uma nova entidade')
   .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
   .action((args, options, logger) => projectEntity.run(args, options, logger))
+  //service
+  .command('service',   'Gera uma service')
+  .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
+  .action((args, options, logger) => projectService.run(args, options, logger))
+  //api
+  .command('api',   'Gera uma API')
+  .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
+  .action((args, options, logger) => projectAPI.run(args, options, logger))
+  //presentation
+  .command('presentation',   'Gera o front-end')
+  .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
+  .action((args, options, logger) => projectFRONT.run(args, options, logger))
 
 
 app.run(prog);

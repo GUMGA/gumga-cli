@@ -85,10 +85,15 @@ module.exports = {
                 str = str.substring(0, str.length - 1);
                 return removeLastDot(str);
             }
+            if (str.startsWith('.')) {
+                str = str.substring(1, str.length);
+                return removeLastDot(str);
+            }
             return str;
         }
 
         inquirer.prompt(questions).then(function (answers) {
+            answers.artifactId = answers.artifactId || args.artifactId;
             answers.artifactId = util.lowerFirstLetter(answers.artifactId);
             answers.groupId = replaceAll(answers.groupId, /[!@#$%*()_+=-`´\[\]\{\}^~<,>;:°|º]/, '');
             answers.groupId = removeLastDot(answers.groupId).toLowerCase();
@@ -278,7 +283,7 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 {
                     type: 'input',
                     message: 'Usuário do banco..: ',
-                    default: answersProject.artifactId,
+                    default: 'root',
                     name: 'user',
                     validate: function (input) {
                         let done = this.async();
@@ -292,7 +297,7 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 {
                     type: 'input',
                     message: 'Senha..: ',
-                    default: answersProject.artifactId,
+                    default: 'senha',
                     name: 'password'
                 }
             ]).then(answers => {
@@ -332,9 +337,11 @@ const configureSecurityGumgFile = (properties, answersProject) => {
                     type: 'input',
                     message: 'Qual o endereço do segurança..: ',
                     name: 'security',
-                    default: 'https://www.gumga.io'
+                    default: 'https://gumga.io'
                 },
             ]).then(answers => {
+                let webConfig = `${answersProject.artifactId}/${answersProject.artifactId}-configuration/src/main/java/${util.replaceAll(answersProject.groupId, '.', '/')}/${answersProject.artifactId}/configuration/web/WebConfiguration.java`
+                util.replaceFiles(new RegExp(/\/\/        registry/g), '            registry', [webConfig]);
                 properties = util.replaceAll(properties, 'GUMGA_SECURITY', answers.security);
                 createFileProperties(properties, answersProject);
                 finalizeMessage();

@@ -5,7 +5,7 @@ const exec = require('child_process').exec;
 module.exports = {
     run: function(args, options, logger){
         if(!util.directoryIsProjectGG()){
-            logger.error('Não identificamos o diretório atual como um projeto GUMGA, certifique-se de estar na pasta raiz do projeto.');
+            ora('API').start().fail(`Não identificamos o diretório atual como um projeto GUMGA, certifique-se de estar na pasta raiz do projeto.`);
             return;
         }
         const spinner = ora('Compilando projeto...').start();
