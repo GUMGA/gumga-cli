@@ -124,11 +124,11 @@ const getAttributes = (attributes, projectInfo, entityExtends, callback, otherFi
                 default: 1,
                 choices: [
                     {
-                        name: 'Criar associação',
+                        name: '1 - Criar associação',
                         value: 'ASSOCIATION'
                     },
                     {
-                        name: 'Criar campo',
+                        name: '2 - Criar campo',
                         value: 'FIELD'
                     }
                 ]
@@ -184,19 +184,19 @@ const generateAssociation = (attributes, callback) => {
                 default: 1,
                 choices: [
                     {
-                        name: 'ManyToOne',
+                        name: '1 - ManyToOne',
                         value: 'ManyToOne',
                     },
                     {
-                        name: 'ManyToMany',
+                        name: '2 - ManyToMany',
                         value: 'ManyToMany',
                     },
                     {
-                        name: 'OneToOne',
+                        name: '3 - OneToOne',
                         value: 'OneToOne',
                     },
                     {
-                        name: 'OneToMany',
+                        name: '4 - OneToMany',
                         value: 'OneToMany',
                     }
                 ]
@@ -254,82 +254,82 @@ const generateField = (attributes, callback) => {
             default: 1,
             choices: [
                 {
-                    name: 'String',
+                    name: '1 - String',
                     value: 'String'
                 },
                 {
-                    name: 'Integer',
+                    name: '2 - Integer',
                     value: 'Integer'
                 },
                 {
-                    name: 'Date',
+                    name: '3 - Date',
                     value: 'Date'
                 },
                 {
-                    name: 'Long',
+                    name: '4 - Long',
                     value: 'Long'
                 },
                 {
-                    name: 'BigDecimal',
+                    name: '5 - BigDecimal',
                     value: 'BigDecimal'
                 },
                 {
-                    name: 'GumgaAddress',
+                    name: '6 - GumgaAddress',
                     value: 'GumgaAddress'
                 },
                 {
-                    name: 'GumgaBoolean',
+                    name: '7 - GumgaBoolean',
                     value: 'GumgaBoolean'
                 },
                 {
-                    name: 'GumgaBarCode',
+                    name: '8 - GumgaBarCode',
                     value: 'GumgaBarCode'
                 },
                 {
-                    name: 'GumgaCEP',
+                    name: '9 - GumgaCEP',
                     value: 'GumgaCEP'
                 },
                 {
-                    name: 'GumgaCNPJ',
+                    name: '10 - GumgaCNPJ',
                     value: 'GumgaCNPJ'
                 },
                 {
-                    name: 'GumgaCPF',
+                    name: '11 - GumgaCPF',
                     value: 'GumgaCPF'
                 },
                 {
-                    name: 'GumgaEMail',
+                    name: '12 - GumgaEMail',
                     value: 'GumgaEMail'
                 },
                 {
-                    name: 'GumgaImage',
+                    name: '13 - GumgaImage',
                     value: 'GumgaImage'
                 }, {
-                    name: 'GumgaMoney',
+                    name: '14 - GumgaMoney',
                     value: 'GumgaMoney'
                 },
                 {
-                    name: 'GumgaMultiLineString',
+                    name: '15 - GumgaMultiLineString',
                     value: 'GumgaMultiLineString'
                 },
                 {
-                    name: 'GumgaPhoneNumber',
+                    name: '16 - GumgaPhoneNumber',
                     value: 'GumgaPhoneNumber'
                 },
                 {
-                    name: 'GumgaTime',
+                    name: '17 - GumgaTime',
                     value: 'GumgaTime'
                 },
                 {
-                    name: 'GumgaIP4',
+                    name: '18 - GumgaIP4',
                     value: 'GumgaIP4'
                 },
                 {
-                    name: 'GumgaIP6',
+                    name: '19 - GumgaIP6',
                     value: 'GumgaIP6'
                 },
                 {
-                    name: 'GumgaURL',
+                    name: '20 - GumgaURL',
                     value: 'GumgaURL'
                 }
             ]

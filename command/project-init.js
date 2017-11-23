@@ -8,34 +8,34 @@ const util = require('./common/util');
 const opener = require("opener");
 
 module.exports = {
-    run: function(args, options, logger){
-        if(util.directoryIsProjectGG()){
+    run: function (args, options, logger) {
+        if (util.directoryIsProjectGG()) {
             logger.error('Você está em um diretório de um projeto existente, não é permitido a criação de outros projetos apartir desse diretório.');
             return;
         }
         let questions = [];
-        if(!args.artifactId) {
+        if (!args.artifactId) {
             questions.push({
                 type: 'input',
                 message: 'Nome do artefato..: ',
                 default: 'exemplo',
                 name: 'artifactId',
-                validate: function(input){
+                validate: function (input) {
                     let done = this.async();
-                    if(!(/^[a-zA-Z0-9]+$/g.test(input))){
+                    if (!(/^[a-zA-Z0-9]+$/g.test(input))) {
                         done('O nome do seu projeto não pode conter caracteres especiais.');
                         return;
                     }
-                    if(fs.existsSync(input)){
+                    if (fs.existsSync(input)) {
                         done('Já existe uma pasta com esse nome no diretório atual, tente outro nome.');
                         return;
-                    }else{
+                    } else {
                         done(null, true);
                     }
                 }
             });
         }
-        if(!args.groupId) {
+        if (!args.groupId) {
             questions.push({
                 type: 'input',
                 message: 'Nome do grupo..: ',
@@ -43,7 +43,7 @@ module.exports = {
                 name: 'groupId'
             });
         }
-        if(!args.version) {
+        if (!args.version) {
             questions.push({
                 type: 'input',
                 message: 'Versão..: ',
@@ -53,103 +53,127 @@ module.exports = {
         }
         questions.push({
             type: 'list',
-            message: 'Qual a tecnologia front-end você deseja usar?',
+            message: 'Como desejar gerar seu front-end?',
             name: 'presentationMode',
             default: 1,
             choices: [
-              {
-                name: 'Angular 1 - RequireJs',
-                value: 'REQUIREJS'
-              },
-              {
-                name: 'Angular 1 - Webpack',
-                value: 'WEBPACK'
-              },  
-              {
-                name: 'Angular 4',
-                value: 'ANGULAR4'
-              }
+                {
+                    name: '1 - Não gerar front-end',
+                    value: 'NONE'
+                },
+                {
+                    name: '3 - Angular 1.x - Webpack',
+                    value: 'WEBPACK'
+                },
+                {
+                    name: '2 - Angular 1.x - RequireJs',
+                    value: 'REQUIREJS'
+                },
+                {
+                    name: '4 - Angular 4',
+                    value: 'ANGULAR4'
+                }
             ]
-          });
+        });
+
+        const replaceAll = function(str, search, replacement) {
+            return str.replace(new RegExp(search, 'g'), replacement);
+        };
+
+        const removeLastDot = (str) => {
+            if (str.endsWith('.')) {
+                str = str.substring(0, str.length - 1);
+                return removeLastDot(str);
+            }
+            return str;
+        }
+
         inquirer.prompt(questions).then(function (answers) {
             answers.artifactId = util.lowerFirstLetter(answers.artifactId);
+            answers.groupId = replaceAll(answers.groupId, /[!@#$%*()_+=-`´\[\]\{\}^~<,>;:°|º]/, '');
+            answers.groupId = removeLastDot(answers.groupId).toLowerCase();
             const spinner = ora('Gerando o projeto').start();
-            if(fs.existsSync(answers.artifactId)){
-                spinner.fail(`Não podemos criar seu projeto, já existe uma pasta com o nome "${answers.artifactId}" no diretório atual.`);      
+            if (fs.existsSync(answers.artifactId)) {
+                spinner.fail(`Não podemos criar seu projeto, já existe uma pasta com o nome "${answers.artifactId}" no diretório atual.`);
                 return;
             }
             answers.artifactId = answers.artifactId || args.artifactId;
             answers.groupId = answers.groupId || args.groupId;
             answers.version = answers.version || args.version;
             const command = `mvn archetype:generate -DinteractiveMode=false -DarchetypeGroupId=io.gumga -DarchetypeArtifactId=gumga-archetype -DarchetypeVersion=LATEST -DgroupId=${answers.groupId} -DartifactId=${answers.artifactId} -Dversion=${answers.version}`;
-            exec(command, {maxBuffer: Infinity}, function (error, stdout, stderr) {     
+            exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
                 if (error !== null) {
-                    spinner.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);            
+                    spinner.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);
                 } else {
                     handlingFolders(answers, spinner);
-                }                    
+                }
             });
         });
     }
 }
 
 const handlingFolders = (answers, projectLoader) => {
-    try{
+    try {
         let dirPresentation = `${answers.artifactId}/${answers.artifactId}-presentation`;
-        switch(answers.presentationMode) {
+        switch (answers.presentationMode) {
+            case 'NONE': 
+                util.deleteFolderRecursive(`${dirPresentation}-webpack`);
+                util.deleteFolderRecursive(dirPresentation);
+                util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
+                util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
             //CASO FOR GERAR EM REQUIREJS
             case 'REQUIREJS':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
                 afterProjectGenerate(projectLoader, answers);
-            break;
+                break;
             //CASO FOR GERAR EM WEBPACK
-            case 'WEBPACK':    
+            case 'WEBPACK':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(dirPresentation);
                 afterProjectGenerate(projectLoader, answers);
-            break;
+                break;
             //CASO FOR GERAR EM ANGULAR 4
             case 'ANGULAR4':
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation-webpack<\/module>`), '', [`${answers.artifactId}/pom.xml`]);
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
                 util.deleteFolderRecursive(`${dirPresentation}/src/main/webapp`);
-    
+
                 const command = `cd ${dirPresentation}/src/main && ng new ${answers.artifactId} --skip-install`;
-                exec(command, {maxBuffer: Infinity}, function (error, stdout, stderr) {
+                exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
                     if (error !== null) {
-                        projectLoader.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);  
-                    } else {                    
+                        projectLoader.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);
+                    } else {
                         fs.rename(`${dirPresentation}/src/main/${answers.artifactId}`, `${dirPresentation}/src/main/webapp`, function (err) {
                             if (err) {
-                                projectLoader.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);           
+                                projectLoader.fail(`Problemas ao gerar o projeto(${answers.artifactId}) \n ${error}`);
                             } else {
                                 util.replaceFiles(/bower|Bower/g, 'npm', [`${dirPresentation}/pom.xml`]);
-                                getInstalledPath('gumga-cli').then(function(pt){
+                                getInstalledPath('gumga-cli').then(function (pt) {
                                     util.copyRecursiveSync(`${pt}/template-presentation/module/META-INF`, `${dirPresentation}/src/main/webapp/META-INF`);
                                     util.copyRecursiveSync(`${pt}/template-presentation/module/WEB-INF`, `${dirPresentation}/src/main/webapp/WEB-INF`);
                                     afterProjectGenerate(projectLoader, answers);
                                 });
-                            }                        
+                            }
                         });
                     }
                 });
-    
-            break;
+
+                break;
         }
         createGGFIle(answers);
         renameGithubFile(answers);
-    }catch(e){
+    } catch (e) {
         util.deleteFolderRecursive(`${answers.artifactId}`);
     }
 }
 
 const createGGFIle = (answers) => {
-    fs.writeFile(`${answers.artifactId}/${util.GG_FILE_CONFIG_NAME}`, JSON.stringify(answers), 'utf8', function (err) {});
+    fs.writeFile(`${answers.artifactId}/${util.GG_FILE_CONFIG_NAME}`, JSON.stringify(answers), 'utf8', function (err) { });
 }
 
 const renameGithubFile = (answers) => {
-    fs.rename(`./${answers.artifactId}/mudar_para_.gitignore`, `${answers.artifactId}/.gitignore`, function(err) {});
+    fs.rename(`./${answers.artifactId}/mudar_para_.gitignore`, `${answers.artifactId}/.gitignore`, function (err) { });
 }
 
 const afterProjectGenerate = (projectLoader, answersProject) => {
@@ -165,11 +189,11 @@ const createGumgaFile = (answersProject) => {
             message: `Você deseja configurar um banco de dados?`
         }
     ]).then(answersMoveFile => {
-        if(answersMoveFile.move){
+        if (answersMoveFile.move) {
             //create folder gumgafiles if not exists
-            if(!fs.existsSync(util.getGumgaFilesDir())) fs.mkdirSync(util.getGumgaFilesDir());
+            if (!fs.existsSync(util.getGumgaFilesDir())) fs.mkdirSync(util.getGumgaFilesDir());
             let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
-            if(fs.existsSync(dir)){
+            if (fs.existsSync(dir)) {
                 inquirer.prompt([
                     {
                         type: 'confirm',
@@ -177,17 +201,17 @@ const createGumgaFile = (answersProject) => {
                         message: `Já existe um arquivo ${answersProject.artifactId}.properties na pasta ${util.getGumgaFilesDir()}, deseja sobrescrevê- lo?`
                     }
                 ]).then(answersOverwriteFile => {
-                    if(answersOverwriteFile.overwrite){
+                    if (answersOverwriteFile.overwrite) {
                         fs.unlinkSync(dir);
                         configureDataBaseGumgaFile(answersProject);
-                    }else{
+                    } else {
                         finalizeMessage();
                     }
                 })
-            }else{
+            } else {
                 configureDataBaseGumgaFile(answersProject);
             }
-        }else{
+        } else {
             finalizeMessage();
         }
     });
@@ -196,7 +220,7 @@ const createGumgaFile = (answersProject) => {
 const configureDataBaseGumgaFile = (answersProject) => {
     getInstalledPath('gumga-cli').then(pathCli => {
         let properties = fs.readFileSync(`${pathCli}/template.properties`, `utf8`);
-        
+
         inquirer.prompt([
             {
                 type: 'list',
@@ -205,11 +229,11 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 default: 1,
                 choices: [
                     {
-                        name: 'MySQL',
+                        name: '1 - MySQL',
                         value: 'MYSQL'
                     },
                     {
-                        name: 'PostgreSQL',
+                        name: '2 - PostgreSQL',
                         value: 'POSTGRES'
                     }
                 ]
@@ -228,9 +252,9 @@ const configureDataBaseGumgaFile = (answersProject) => {
                     message: 'Porta..: ',
                     name: 'port',
                     default: typeDatabase == 'MYSQL' ? 3306 : typeDatabase == 'POSTGRES' ? 5432 : 1000,
-                    validate: function(input){
+                    validate: function (input) {
                         let done = this.async();
-                        if(!Number.isInteger(input)){
+                        if (Number(input) + '' == 'NaN') {
                             done('Por favor, informe uma porta válida.');
                             return;
                         }
@@ -242,9 +266,9 @@ const configureDataBaseGumgaFile = (answersProject) => {
                     message: 'Nome da base de dados..: ',
                     default: answersProject.artifactId,
                     name: 'database',
-                    validate: function(input){
+                    validate: function (input) {
                         let done = this.async();
-                        if(!input){
+                        if (!input) {
                             done('Por favor, preencha o nome da base de dados.');
                             return;
                         }
@@ -256,9 +280,9 @@ const configureDataBaseGumgaFile = (answersProject) => {
                     message: 'Usuário do banco..: ',
                     default: answersProject.artifactId,
                     name: 'user',
-                    validate: function(input){
+                    validate: function (input) {
                         let done = this.async();
-                        if(!input){
+                        if (!input) {
                             done('Por favor, preencha o nome do usuário.');
                             return;
                         }
@@ -275,11 +299,11 @@ const configureDataBaseGumgaFile = (answersProject) => {
                 properties = util.replaceAll(properties, 'GUMGA_DB_NAME', typeDatabase);
                 properties = util.replaceAll(properties, 'GUMGA_USER', answers.user);
                 properties = util.replaceAll(properties, 'GUMGA_PASSWORD', answers.password);
-                switch(typeDatabase){
+                switch (typeDatabase) {
                     case 'MYSQL':
                         properties = util.replaceAll(properties, 'GUMGA_URL', `jdbc:mysql://${answers.host}:${answers.port}/${answers.database}?zeroDateTimeBehavior=convertToNull&useUnicode=yes&characterEncoding=utf8&createDatabaseIfNotExist=true`);
                         properties = util.replaceAll(properties, 'GUMGA_CLASS_NAME', 'com.mysql.jdbc.jdbc2.optional.MysqlDataSource');
-                        properties = util.replaceAll(properties, 'GUMGA_DIALECT', 'org.hibernate.dialect.MySQL5Dialect');                        
+                        properties = util.replaceAll(properties, 'GUMGA_DIALECT', 'org.hibernate.dialect.MySQL5Dialect');
                         break;
                     case 'POSTGRES':
                         properties = util.replaceAll(properties, 'GUMGA_URL', `jdbc:postgresql://${answers.host}:${answers.port}/${answers.database}?createDatabaseIfNotExist=true`);
@@ -302,7 +326,7 @@ const configureSecurityGumgFile = (properties, answersProject) => {
             message: `Você utiliza o segurança?`
         }
     ]).then(resp => {
-        if(resp.usage){
+        if (resp.usage) {
             inquirer.prompt([
                 {
                     type: 'input',
@@ -315,7 +339,7 @@ const configureSecurityGumgFile = (properties, answersProject) => {
                 createFileProperties(properties, answersProject);
                 finalizeMessage();
             });
-        }else{
+        } else {
             createFileProperties(properties, answersProject);
             finalizeMessage();
         }
@@ -324,7 +348,7 @@ const configureSecurityGumgFile = (properties, answersProject) => {
 
 const createFileProperties = (str, answersProject) => {
     let dir = util.getGumgaFilesDir().concat(`/${answersProject.artifactId}.properties`);
-    fs.writeFile(dir, str, function(err) {}); 
+    fs.writeFile(dir, str, function (err) { });
 }
 
 const finalizeMessage = () => {
