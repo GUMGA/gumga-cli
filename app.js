@@ -9,7 +9,7 @@ module.exports = {
     run: (prog) => {
         getInstalledPath('@angular/cli').then(function(pt){
             //First Verify Java
-            util.testApplicationInstalled('java', 'java version', function(javaInstalled){
+            util.testApplicationInstalled('java', /(java version|openjdk version)/g, function(javaInstalled){
               if(javaInstalled){
                 util.testApplicationInstalled('mvn', 'Apache Maven', function(mavenInstalled){
                   if(mavenInstalled){
