@@ -28,6 +28,8 @@ prog
   .action((args, options, logger) => projectInit.run(args, options, logger))
   //build
   .command('build', 'Faz a compilação dos módulos')
+  .argument('[run]', 'Executa os modulos após o build.')
+  .argument('[module]', 'Modulo a ser executado. front | back', /^[a-zA-Z]+$/g)
   .action((args, options, logger) => projectBuild.run(args, options, logger))
   //create entity
   .command('entity', 'Gera uma nova entidade')
@@ -45,8 +47,9 @@ prog
   .command('presentation', 'Gera o front-end')
   .argument('[entityName]', 'Nome da entidade', /^[a-zA-Z]+$/g)
   .action((args, options, logger) => projectFRONT.run(args, options, logger))
-  //start application
-  .command('start', 'Inicia o back-end e front-end')
+  //run application
+  .command('run', 'Inicia o back-end e front-end')
+  .argument('[module]', 'Modulo a ser executado. front | back', /^[a-zA-Z]+$/g)
   .action((args, options, logger) => projectStart.run(args, options, logger))
 
 

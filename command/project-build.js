@@ -2,6 +2,8 @@ const util = require('./common/util');
 const ora = require('ora');
 const exec = require('child_process').exec;
 
+const projectStart = require('./project-start'); 
+
 module.exports = {
     run: function(args, options, logger){
         if(!util.directoryIsProjectGG()){
@@ -24,6 +26,9 @@ module.exports = {
                 clearTimeout(firstMessage);
                 clearTimeout(secondaryMessage);
                 spinner.succeed(`Compilado com sucesso.`);
+                if(args.run && args.run == 'run'){
+                    projectStart.run(args, options, logger);
+                }
             }                    
         });
     }
