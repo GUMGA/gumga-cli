@@ -44,11 +44,11 @@ var util = {
             });
         })
     },
-    build: () => {
+    build: (buildPresentation) => {
         let project = util.getProjectInfo();
         return new Promise((resp, rej) => {
             let project = util.getProjectInfo(), command;
-            if(project.presentationMode == 'NONE'){
+            if(project.presentationMode == 'NONE' || buildPresentation){
                 command = 'mvn clean install';
             }else{
                 command = project.presentationMode == 'WEBPACK' ? `mvn -pl '!${project.artifactId}-presentation-webpack' install` : `mvn -pl '!mateusexemplo-presentation' install`;

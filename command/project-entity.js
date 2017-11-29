@@ -346,6 +346,14 @@ const generateField = (attributes, callback) => {
                 {
                     name: '20 - GumgaURL',
                     value: 'GumgaURL'
+                },
+                {
+                    name: '21 - Double',
+                    value: 'Double'
+                },
+                {
+                    name: '22 - Boolean',
+                    value: 'Boolean'
                 }
             ]
         }
