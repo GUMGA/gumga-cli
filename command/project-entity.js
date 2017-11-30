@@ -225,6 +225,10 @@ const generateAssociation = (attributes, callback) => {
                         done('Por favor, não utilize espaços.');
                         return;
                     }
+                    if (input == 'id') {
+                        done('Não é necessário inserir o campo id, ele já é gerado por padrão.');
+                        return;
+                    }
                     done(null, true);
                 }
             }).then(answersName => {
@@ -258,6 +262,10 @@ const generateField = (attributes, callback) => {
                 }
                 if (input.indexOf(' ') > 0) {
                     done('Por favor, não utilize espaços.');
+                    return;
+                }
+                if (input == 'id') {
+                    done('Não é necessário inserir o campo id, ele já é gerado por padrão.');
                     return;
                 }
                 done(null, true);
