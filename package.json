@@ -1,6 +1,6 @@
 {
   "name": "gumga-cli",
-  "version": "1.27.0",
+  "version": "2.0.0",
   "contributors": [
     {
       "name": "Mateus Miranda de Almeida",
@@ -15,6 +15,10 @@
   ],
   "bin": {
     "gg": "./gg"
+  },
+  "engines": {
+    "node": ">= 6.9.0",
+    "npm": ">= 3.0.0"
   },
   "description": "",
   "main": "gg",

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+'use strict';
+
 const prog = require('caporal');
 const app = require('./app.js');
 
@@ -74,9 +76,9 @@ request.get({ url: 'https://unpkg.com/gumga-cli@latest/package.json', followRedi
     ]).then(resp => {
       if (resp.update) {
         console.log('> npm install -g gumga-cli@latest'.cyan);
-        let command = 'npm install -g gumga-cli@latest --unsafe-perm';
+        let command = 'npm install -g gumga-cli@latest --force --unsafe-perm';
 
-        if (process.platform != 'linux') {
+        if (process.platform != 'linux' && process.platform != 'darwin') {
           let spinner = ora('Executando comando...').start();
           exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
             if (error !== null) {
@@ -87,33 +89,27 @@ request.get({ url: 'https://unpkg.com/gumga-cli@latest/package.json', followRedi
           });
         }
 
-        if (process.platform == 'linux') {
-          command = 'sudo ' + command;
-          inquirer.prompt([
-            {
-              type: 'password',
-              message: '[sudo] senha: ',
-              name: 'password'
+        if (process.platform == 'linux' || process.platform == 'darwin') {
+
+          exec('sudo echo gg', { maxBuffer: Infinity }, function (error, stdout, stderr) {
+            if (error !== null) {
+              spinner.fail(`Senha incorreta, tente novamente. \n`);
+              process.exit();
+            } else {
+              let spinner = ora('Executando comando...').start();
+              command = 'sudo ' + command;
+              exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
+                if (error !== null) {
+                  spinner.fail(`Problemas atualizar o gg, atualize manualmente. \n`);
+                  process.exit();
+                } else {
+                  spinner.succeed('Atualização concluída.');
+                }
+              });
             }
-          ]).then(resp => {
-            let spinner = ora('Executando comando...').start();
-            exec('echo "' + resp.password + '" | sudo -S su', { maxBuffer: Infinity }, function (error, stdout, stderr) {
-              if (error !== null) {
-                spinner.fail(`Senha incorreta, tente novamente. \n`);
-                process.exit();
-              } else {
-                exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
-                  if (error !== null) {
-                    spinner.fail(`Problemas atualizar o gg, atualize manualmente. \n`);
-                    process.exit();
-                  } else {
-                    spinner.succeed('Atualização concluída.');
-                  }
-                });
-              }
-            });
-          })
-        };
+          });
+
+        }
 
       } else {
         app.run(prog);
