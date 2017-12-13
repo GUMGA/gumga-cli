@@ -62,6 +62,11 @@ prog
 
 
 request.get({ url: 'https://unpkg.com/gumga-cli@latest/package.json', followRedirect: true }, function (err, res, body) {
+  if(err != null){
+    app.run(prog);
+    return;
+  }
+
   let npmPackage = JSON.parse(body);
   let size = npmPackage.version.split('.').join('').length > version.split('.').join('').length ? version.split('.').join('').length : npmPackage.version.split('.').join('').length;
   let last = npmPackage.version.split('.').join('').substring(0, size);
