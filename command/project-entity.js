@@ -59,16 +59,35 @@ module.exports = {
     }
 }
 
+//INICIA A MONTAGEM DO COMANDO DE GERAR A ENTIDADE.
 const startEntity = (args) => {
     let projectInfo = util.getProjectInfo(), questions = [];
     let packageEntity = `${projectInfo.groupId}.${projectInfo.artifactId}.domain.model.${util.upperFirstLetter(args.entityName)}`;
     getExtends(projectInfo, entityExtends => {
-        getAttributes(``, projectInfo, entityExtends, attributes => {
-            createEntity(args, projectInfo, packageEntity, entityExtends, attributes.slice(0, -1));
-        });
+        checkSuperClass(projectInfo, isExtends => {
+            getAttributes(``, projectInfo, entityExtends, attributes => {
+                createEntity(args, projectInfo, packageEntity, entityExtends, attributes.slice(0, -1), isExtends);
+            });
+        })
     })
 }
 
+//verifica se essa entidade é uma entidade que será herdada por outras entidades.
+const checkSuperClass = (projectInfo, callback) => {
+    inquirer.prompt([
+        {
+            type: 'confirm',
+            message: 'Essa entidade será herdada por outra entidade?',
+            name: 'extends',
+            default: false
+        }
+    ]).then(questions => {
+        callback(questions.extends ? 'YES' : 'NO');
+    })
+}
+
+
+//ESSE METODO DEFINE QUAL A ENTIDADE EM QUE EU FAÇO HERANÇA COM A ENTIDADE QUE ESTOU CRIANDO
 const getExtends = (projectInfo, callback) => {
     let modelDir = util.getModelDir();
     if (!fs.existsSync(modelDir) || util.findFilesInDir(modelDir, '.java').length == 0) {
@@ -373,9 +392,9 @@ const generateField = (attributes, callback) => {
     });
 }
 
-const createEntity = (args, projectInfo, packageEntity, entityExtends, attributes) => {
+const createEntity = (args, projectInfo, packageEntity, entityExtends, attributes, isExtends) => {
     const spinner = ora('Gerando entidade...').start();
-    let command = `cd ${projectInfo.artifactId}-domain && mvn io.gumga:gumgag:entidade ${entityExtends} -Dentidade=${packageEntity}`;
+    let command = `cd ${projectInfo.artifactId}-domain && mvn io.gumga:gumgag:entidade -Dextends=${isExtends} ${entityExtends} -Dentidade=${packageEntity}`;
     if (attributes) command += ` -Datributos="${attributes}" `;
     exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
         if (error !== null) {
