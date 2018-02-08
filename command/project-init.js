@@ -121,7 +121,7 @@ const handlingFolders = (answers, projectLoader) => {
     try {
         let dirPresentation = `${answers.artifactId}/${answers.artifactId}-presentation`;
         switch (answers.presentationMode) {
-            case 'NONE': 
+            case 'NONE':
                 util.deleteFolderRecursive(`${dirPresentation}-webpack`);
                 util.deleteFolderRecursive(dirPresentation);
                 util.replaceFiles(new RegExp(`<module>${answers.artifactId}-presentation<\/module>`), '', [`${answers.artifactId}/pom.xml`]);

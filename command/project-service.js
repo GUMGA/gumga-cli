@@ -67,7 +67,7 @@ const projectService = {
                             spinner.fail(`Problemas ao gerar service e repositório. \n ${error}`);
                             if(callback) callback(error);
                         } else {
-                            spinner.succeed(`Service e repositório foi gerado.`);
+                            spinner.succeed(`Service e repositório foram gerados.`);
                             if(callback) callback(stdout);
                         }
                     });
