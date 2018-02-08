@@ -51,7 +51,7 @@ var util = {
             if(project.presentationMode == 'NONE' || buildPresentation){
                 command = 'mvn clean install';
             }else{
-                command = project.presentationMode == 'WEBPACK' ? `mvn -pl '!${project.artifactId}-presentation-webpack' install` : `mvn -pl '!mateusexemplo-presentation' install`;
+                command = project.presentationMode == 'WEBPACK' ? `mvn -pl '!${project.artifactId}-presentation-webpack' install` : `mvn -pl '!${project.artifactId}-presentation' install`;
             }
             exec(command, { maxBuffer: Infinity }, function (error, stdout, stderr) {
                 if (error !== null) {

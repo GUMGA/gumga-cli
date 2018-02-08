@@ -65,10 +65,10 @@ module.exports = {
                     name: '3 - Angular 1.x - Webpack',
                     value: 'WEBPACK'
                 },
-                {
-                    name: '2 - Angular 1.x - RequireJs',
-                    value: 'REQUIREJS'
-                },
+                // {
+                //     name: '2 - Angular 1.x - RequireJs',
+                //     value: 'REQUIREJS'
+                // },
                 {
                     name: '4 - Angular 4',
                     value: 'ANGULAR4'

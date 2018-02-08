@@ -62,7 +62,7 @@ prog
 
 
 request.get({ url: 'https://unpkg.com/gumga-cli@latest/package.json', followRedirect: true }, function (err, res, body) {
-  if(err != null){
+  if (err != null) {
     app.run(prog);
     return;
   }

@@ -8,7 +8,6 @@ const opener = require("opener");
 module.exports = {
     run: (prog) => {
         getInstalledPath('@angular/cli').then(function(pt){
-            //First Verify Java
             util.testApplicationInstalled('java', /(java version|openjdk version)/g, function(javaInstalled){
               if(javaInstalled){
                 util.testApplicationInstalled('mvn', 'Apache Maven', function(mavenInstalled){
@@ -47,7 +46,6 @@ module.exports = {
               }
             });
           }, () => {
-            //pede para o usuário instalar o angular cli.
             const spinner = ora('Aguarde...').start();
             spinner.fail(`Não encontramos algumas dependências, execute: npm install -g @angular/cli`);
           });
