@@ -75,7 +75,7 @@ const projectFRONT = {
                         }
                     });
             }, err => {
-                spinner.fail(`Problemas ao gerar front-end. \n ${err}`);
+                spinner.fail(`Problemas ao gerar o front-end. \n ${err}`);
             })
         }
     }

@@ -10,7 +10,7 @@ const opener = require("opener");
 module.exports = {
     run: function (args, options, logger) {
         if (util.directoryIsProjectGG()) {
-            logger.error('Você está em um diretório de um projeto existente, não é permitido a criação de outros projetos apartir desse diretório.');
+            logger.error('Você está em um diretório de um projeto existente, não é permitido a criação de outros projetos neste diretório.');
             return;
         }
         let questions = [];

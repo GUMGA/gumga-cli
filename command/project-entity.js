@@ -189,7 +189,7 @@ const generateAssociation = (attributes, callback) => {
         }
         let preCommand = {
             type: 'list',
-            message: 'Deseja fazer associação com qual entidade?',
+            message: 'Deseja criar associação com qual entidade?',
             name: 'association',
             default: 1,
             choices: []
@@ -457,7 +457,7 @@ const generateChoicesPending = (choices, packageEntity, entityName) => {
                         generateChoicesPending(choices.filter(choiceValue => choiceValue != choice), packageEntity, entityName);
                     });
                     break;
-                case 'FRONTEND':
+                case 'FRONT-END':
                     projectFRONT.generateFrontByEntity(packageEntity, entityName, () => {
                         generateChoicesPending(choices.filter(choiceValue => choiceValue != choice), packageEntity, entityName);
                     });

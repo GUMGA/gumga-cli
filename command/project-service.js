@@ -54,7 +54,7 @@ const projectService = {
     generateServiceByEntity(entityPackage, entityName, callback) {
         let dirService = util.getApplicationDir().concat('/service/').concat(`${util.upperFirstLetter(entityName)}Service.java`);
         if(fs.existsSync(dirService)){
-            ora('Service').start().fail(`Service e repositório não foi gerada, já existe esses arquivos criados.`);
+            ora('Service').start().fail(`Service e repositório não foram gerados, arquivos já existentes.`);
         }else{
             const spinner = ora('Aguarde, executando: mvn clean install').start();
             util.buildDomain().then(resp => {
